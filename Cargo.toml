@@ -10,3 +10,12 @@ obj = { version = "^0.8", features = ["genmesh"] }
 genmesh = "^0.5"
 glutin = "^0.12"
 cgmath = "^0.16"
+isosurface = {path="../isosurface"}
+env_logger = "^0.5"
+log = "^0.4"
+rand = "^0.4"
+lazy_static = "^1.0"
+serde = "^1.0"
+serde_derive = "^1.0"
+serde_yaml = "^0.7"
+config = "^0.8"
