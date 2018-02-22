@@ -6,6 +6,7 @@ extern crate glutin;
 extern crate obj;
 
 mod init;
+mod handle_events;
 mod prelude;
 mod shader;
 mod util;
@@ -16,11 +17,20 @@ use std::time::{Duration, Instant};
 use prelude::*;
 use cgmath::prelude::*;
 use cgmath::conv::*;
+use cgmath::Deg;
 use std::str;
+use util::camera::*;
+use handle_events::*;
 
 fn main() {
     let mut events_loop = glutin::EventsLoop::new();
-    let display = init::open_display(&events_loop);
+    let viewport = glium::Rect {
+        left: 0,
+        bottom: 0,
+        width: 1024,
+        height: 768,
+    };
+    let display = init::open_display("Planetary destruction simulator", viewport, &events_loop);
 
     // Build VBO and IBO for the teapot
     let vertex_buffer =
@@ -33,7 +43,14 @@ fn main() {
         },
     ).unwrap();
 
-    let camera = util::camera::Camera::new();
+    let mut camera_control = CameraControl::default();
+    let mut camera = RotationalCamera::new(
+        Point3f::new(0.0, 0.0, 0.0),
+        Deg(0f32),
+        Deg(0f32),
+        1f32,
+        1024.0 / 768.0,
+    );
 
     let mut accumulator = Duration::new(0, 0);
     let mut last_frame_time = Instant::now();
@@ -47,7 +64,7 @@ fn main() {
     let mut keep_running = true;
     while keep_running {
         // Build uniforms
-        let c_projection = camera.get_perspective() * camera.get_view();
+        let c_projection = camera.perspective() * camera.view();
         let uniforms = uniform! {
             vpmatrix: array4x4(c_projection),
             translation: array3(m_transform.disp),
@@ -79,9 +96,12 @@ fn main() {
             .unwrap();
         target.finish().unwrap();
 
-        if !handle_events(&mut events_loop) {
-            keep_running = false;
+        let user_actions = poll_events(&mut events_loop);
+        if !process_global_events(&mut camera, &user_actions) {
+            keep_running = false
         }
+        process_camera_events(&mut camera_control, &user_actions);
+        camera_control.update_camera(&mut camera);
 
         let now = Instant::now();
         accumulator += now - last_frame_time;
@@ -91,24 +111,12 @@ fn main() {
         while accumulator >= fixed_deltatime {
             accumulator -= fixed_deltatime;
 
-            // TODO: update()
+            let dt = (fixed_deltatime.as_secs() as f64
+                + fixed_deltatime.subsec_nanos() as f64 * 1e-9) as f32;
+            camera.update(dt);
         }
-        // TODO: late_update()
+        camera.late_update();
 
         thread::sleep(fixed_deltatime - accumulator);
     }
-}
-
-fn handle_events(events_loop: &mut glutin::EventsLoop) -> bool {
-    let mut ret = true;
-    events_loop.poll_events(|event| match event {
-        glutin::Event::WindowEvent { event, .. } => match event {
-            glutin::WindowEvent::Closed => {
-                ret = false;
-            }
-            _ => {}
-        },
-        _ => {}
-    });
-    ret
 }
