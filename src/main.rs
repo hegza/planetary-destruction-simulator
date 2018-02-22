@@ -16,11 +16,11 @@ use std::thread;
 use std::time::{Duration, Instant};
 use prelude::*;
 use cgmath::prelude::*;
-use cgmath::conv::*;
 use cgmath::Deg;
 use std::str;
 use util::camera::*;
 use handle_events::*;
+use cgmath::conv::*;
 
 fn main() {
     let mut events_loop = glutin::EventsLoop::new();
@@ -63,38 +63,33 @@ fn main() {
 
     let mut keep_running = true;
     while keep_running {
-        // Build uniforms
-        let c_projection = camera.perspective() * camera.view();
-        let uniforms = uniform! {
-            vpmatrix: array4x4(c_projection),
-            translation: array3(m_transform.disp),
-            orientation: array4(m_transform.rot),
-            scale: m_transform.scale,
-        };
+        {
+            let uniforms = shader::project(&camera, &m_transform);
 
-        // Draw parameters
-        let params = glium::DrawParameters {
-            depth: glium::Depth {
-                test: glium::DepthTest::IfLess,
-                write: true,
+            // Draw parameters
+            let params = glium::DrawParameters {
+                depth: glium::Depth {
+                    test: glium::DepthTest::IfLess,
+                    write: true,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        };
+            };
 
-        // Draw frame
-        let mut target = display.draw();
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
-        target
-            .draw(
-                &vertex_buffer,
-                &index::NoIndices(index::PrimitiveType::TrianglesList),
-                &program,
-                &uniforms,
-                &params,
-            )
-            .unwrap();
-        target.finish().unwrap();
+            // Draw frame
+            let mut target = display.draw();
+            target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
+            target
+                .draw(
+                    &vertex_buffer,
+                    &index::NoIndices(index::PrimitiveType::TrianglesList),
+                    &program,
+                    &uniforms,
+                    &params,
+                )
+                .unwrap();
+            target.finish().unwrap();
+        }
 
         let user_actions = poll_events(&mut events_loop);
         if !process_global_events(&mut camera, &user_actions) {
