@@ -41,6 +41,10 @@ impl Camera {
         &self.position
     }
 
+    pub fn target(&self) -> &Point3f {
+        &self.target
+    }
+
     pub fn set_position(&mut self, pos: Point3f) {
         self.position = pos;
     }

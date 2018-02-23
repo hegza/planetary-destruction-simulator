@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use glium::uniforms::{EmptyUniforms, UniformsStorage};
 use util::camera::Camera;
 use cgmath::conv::*;

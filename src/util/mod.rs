@@ -4,10 +4,12 @@ pub mod camera;
 
 use std::fs::File;
 use std::io::Read;
-use glium::{self, Display};
-use glium::vertex::VertexBufferAny;
+use glium::Display;
+use glium::vertex::{VertexBuffer, VertexBufferAny};
 use obj;
 use genmesh;
+use std::slice;
+use std::mem;
 
 /// Reads a file into a string.
 pub fn read_file(filename: &str) -> String {
@@ -61,7 +63,17 @@ pub fn load_wavefront(display: &Display, data: &[u8]) -> VertexBufferAny {
         }
     }
 
-    glium::vertex::VertexBuffer::new(display, &vertex_data)
+    VertexBuffer::new(display, &vertex_data)
         .unwrap()
         .into_vertex_buffer_any()
+}
+
+/// This is used to reinterpret slices of floats as slices of repr(C) structs, without any
+/// copying. It is optimal, but it is also punching holes in the type system. I hope that Rust
+/// provides safe functionality to handle this in the future. In the meantime, reproduce
+/// this workaround at your own risk.
+pub fn reinterpret_cast_slice<S, T>(input: &[S]) -> &[T] {
+    let length_in_bytes = input.len() * mem::size_of::<S>();
+    let desired_length = length_in_bytes / mem::size_of::<T>();
+    unsafe { slice::from_raw_parts(input.as_ptr() as *const T, desired_length) }
 }
