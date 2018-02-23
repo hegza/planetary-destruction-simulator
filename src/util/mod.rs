@@ -21,17 +21,25 @@ pub fn read_file(filename: &str) -> String {
     contents
 }
 
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct VertexPN {
+    pub position: [f32; 3],
+    pub normal: [f32; 3],
+}
+implement_vertex!(VertexPN, position, normal);
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct VertexPNT {
+    pub position: [f32; 3],
+    pub normal: [f32; 3],
+    pub texture: [f32; 2],
+}
+implement_vertex!(VertexPNT, position, normal, texture);
+
 /// Returns a vertex buffer that should be rendered as `TrianglesList`.
 pub fn load_wavefront(display: &Display, data: &[u8]) -> VertexBufferAny {
-    #[derive(Copy, Clone)]
-    struct Vertex {
-        position: [f32; 3],
-        normal: [f32; 3],
-        texture: [f32; 2],
-    }
-
-    implement_vertex!(Vertex, position, normal, texture);
-
     let mut data = ::std::io::BufReader::new(data);
     let data = obj::Obj::load_buf(&mut data).unwrap();
 
@@ -52,7 +60,7 @@ pub fn load_wavefront(display: &Display, data: &[u8]) -> VertexBufferAny {
                     let texture = texture.unwrap_or([0.0, 0.0]);
                     let normal = normal.unwrap_or([0.0, 0.0, 0.0]);
 
-                    vertex_data.push(Vertex {
+                    vertex_data.push(VertexPNT {
                         position: position,
                         normal: normal,
                         texture: texture,

@@ -4,6 +4,7 @@ use util::camera::Camera;
 use cgmath::conv::*;
 use prelude::*;
 
+/// Creates the required uniforms for the camera-model projection shader
 pub fn project<'c, 't>(
     camera: &'c Camera,
     transform: &'t Decomposedf,
