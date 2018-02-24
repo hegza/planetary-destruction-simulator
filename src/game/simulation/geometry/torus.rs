@@ -1,7 +1,7 @@
 use isosurface::source::Source;
 
 /// The distance-field equation for a torus
-fn torus(x: f32, y: f32, z: f32) -> f32 {
+pub fn torus(x: f32, y: f32, z: f32) -> f32 {
     const R1: f32 = 1.0 / 4.0;
     const R2: f32 = 1.0 / 10.0;
     let q_x = ((x * x + y * y).sqrt()).abs() - R1;
@@ -9,12 +9,10 @@ fn torus(x: f32, y: f32, z: f32) -> f32 {
     len - R2
 }
 
-pub struct Torus {
-    pub counter: f32,
-}
+pub struct Torus {}
 
 impl Source for Torus {
     fn sample(&self, x: f32, y: f32, z: f32) -> f32 {
-        torus(x - 0.5, y - 0.5, z - 0.5 + self.counter)
+        torus(x - 0.5, y - 0.5, z - 0.5)
     }
 }

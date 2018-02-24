@@ -1,19 +1,18 @@
-mod torus;
+mod geometry;
+mod unit_cube;
 
 use glium::*;
-use prelude::*;
 use cgmath::prelude::*;
 use cgmath::Deg;
 use std::str;
 use util::camera::*;
 use handle_events::*;
-use isosurface::source::*;
-use isosurface::marching_cubes::MarchingCubes;
 use index::PrimitiveType;
-use util;
 use util::*;
+use prelude::*;
 use shader;
-use self::torus::*;
+use self::geometry::*;
+use self::unit_cube::*;
 
 pub struct Simulation {
     program: Program,
@@ -23,11 +22,24 @@ pub struct Simulation {
     geom_gen: GeometryGen,
     vbo: VertexBuffer<VertexPN>,
     ibo: IndexBuffer<u32>,
+    cube_vbo: VertexBuffer<VertexPN>,
+    cube_ibo: IndexBuffer<u32>,
+    cfg: Config,
     ended: bool,
+}
+
+struct Config {
+    pub render_cube: bool,
+    pub scalar_field_dim: usize,
 }
 
 impl Simulation {
     pub fn new(display: &mut Display) -> Simulation {
+        let cfg = Config {
+            render_cube: true,
+            scalar_field_dim: 8,
+        };
+
         let program = program!(display,
         140 => {
             vertex: str::from_utf8(include_bytes!("../../shader/project.140.vert")).unwrap(),
@@ -50,7 +62,7 @@ impl Simulation {
             disp: Vector3f::zero(),
         };
 
-        let geom_gen = GeometryGen::new(8);
+        let geom_gen = GeometryGen::new(cfg.scalar_field_dim);
 
         Simulation {
             program,
@@ -60,11 +72,15 @@ impl Simulation {
             geom_gen,
             vbo: VertexBuffer::dynamic(display, &[]).unwrap(),
             ibo: IndexBuffer::dynamic(display, PrimitiveType::TrianglesList, &[]).unwrap(),
+            cube_vbo: VertexBuffer::new(display, &UNIT_CUBE_VBO).unwrap(),
+            cube_ibo: IndexBuffer::new(display, PrimitiveType::TrianglesList, &UNIT_CUBE_IBO)
+                .unwrap(),
+            cfg,
             ended: false,
         }
     }
     pub fn draw(&mut self, display: &mut Display) {
-        let uniforms = shader::project(&self.camera, &self.m_transform);
+        let model_uni = shader::project(&self.camera, &self.m_transform);
 
         // Draw parameters
         let params = DrawParameters {
@@ -80,8 +96,19 @@ impl Simulation {
         // Draw frame
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
+        if self.cfg.render_cube {
+            target
+                .draw(
+                    &self.cube_vbo,
+                    &self.cube_ibo,
+                    &self.program,
+                    &model_uni,
+                    &params,
+                )
+                .unwrap();
+        }
         target
-            .draw(&self.vbo, &self.ibo, &self.program, &uniforms, &params)
+            .draw(&self.vbo, &self.ibo, &self.program, &model_uni, &params)
             .unwrap();
         target.finish().unwrap();
     }
@@ -105,52 +132,5 @@ impl Simulation {
     }
     pub fn ended(&self) -> bool {
         self.ended
-    }
-}
-
-struct GeometryGen {
-    marching_cubes: MarchingCubes,
-    central_difference: CentralDifference<Torus>,
-}
-
-impl GeometryGen {
-    pub fn new(scalar_field_side: usize) -> GeometryGen {
-        let torus = Torus { counter: 0f32 };
-        let central_difference = CentralDifference::new(torus);
-        let marching_cubes = MarchingCubes::new(scalar_field_side);
-        GeometryGen {
-            marching_cubes,
-            central_difference,
-        }
-    }
-
-    pub fn fixed_update(&mut self, dt: f32) {
-        self.central_difference.source_mut().counter += dt * 0.05f32;
-    }
-
-    pub fn update_vbo(
-        &mut self,
-        vbo: &mut VertexBuffer<VertexPN>,
-        ibo: &mut IndexBuffer<u32>,
-        display: &Display,
-    ) {
-        // Note: the n:o vertices/indices changes over time.
-        let mut vertices = vec![];
-        let mut indices = vec![];
-        self.marching_cubes.extract_with_normals(
-            &self.central_difference,
-            &mut vertices,
-            &mut indices,
-        );
-        // Re-normalize from [0, 1] to [-1, 1]
-        vertices.chunks_mut(6).for_each(|chunk| {
-            chunk[0] = chunk[0] * 2f32 - 1f32;
-            chunk[1] = chunk[1] * 2f32 - 1f32;
-            chunk[2] = chunk[2] * 2f32 - 1f32;
-        });
-        *vbo = VertexBuffer::dynamic(display, util::reinterpret_cast_slice(&vertices))
-            .expect("failed to create vertex buffer");
-        *ibo = IndexBuffer::dynamic(display, PrimitiveType::TrianglesList, &indices)
-            .expect("failed to create index buffer");
     }
 }

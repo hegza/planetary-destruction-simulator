@@ -6,8 +6,11 @@ extern crate glium;
 extern crate glutin;
 extern crate isosurface;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate log;
 extern crate obj;
+extern crate rand;
 
 mod game;
 mod init;
