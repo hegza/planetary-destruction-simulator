@@ -36,8 +36,8 @@ struct Config {
 impl Simulation {
     pub fn new(display: &mut Display) -> Simulation {
         let cfg = Config {
-            render_cube: true,
-            scalar_field_dim: 8,
+            render_cube: false,
+            scalar_field_dim: 16,
         };
 
         let program = program!(display,
@@ -51,8 +51,8 @@ impl Simulation {
         let camera = RotationalCamera::new(
             Point3f::new(0.0, 0.0, 0.0),
             Deg(0f32),
-            Deg(90f32),
-            3f32,
+            Deg(0f32),
+            2f32,
             1024.0 / 768.0,
         );
 

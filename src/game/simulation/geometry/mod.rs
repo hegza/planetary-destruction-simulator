@@ -24,7 +24,7 @@ pub struct GeometryGen {
 
 impl GeometryGen {
     pub fn new(scalar_field_side: usize) -> GeometryGen {
-        let model = ScalarField::new(scalar_field_side, 0.18f32);
+        let model = ScalarField::new(scalar_field_side, 0.16f32);
         let source = CentralDifference::new(model);
         let marching_cubes = MarchingCubes::new(scalar_field_side);
         GeometryGen {
@@ -45,7 +45,7 @@ impl GeometryGen {
         let s = (f32::sin(self.acc * PI * 2f32 * (1f32 / PERIOD)) + 1f32) * 0.5f32;
         // p -> [MIN, MAX]
         let p = s * (MAX - MIN) + MIN;
-        *self.source.inner_mut() = ScalarField::new(self.dim, p);
+        //*self.source.inner_mut() = ScalarField::new(self.dim, p);
     }
 
     pub fn update_vbo(
