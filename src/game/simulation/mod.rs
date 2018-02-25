@@ -1,3 +1,4 @@
+mod settings;
 mod geometry;
 mod unit_cube;
 
@@ -13,6 +14,7 @@ use prelude::*;
 use shader;
 use self::geometry::*;
 use self::unit_cube::*;
+use self::settings::*;
 
 pub struct Simulation {
     program: Program,
@@ -24,21 +26,13 @@ pub struct Simulation {
     ibo: IndexBuffer<u32>,
     cube_vbo: VertexBuffer<VertexPN>,
     cube_ibo: IndexBuffer<u32>,
-    cfg: Config,
+    cfg: Settings,
     ended: bool,
-}
-
-struct Config {
-    pub render_cube: bool,
-    pub scalar_field_dim: usize,
 }
 
 impl Simulation {
     pub fn new(display: &mut Display) -> Simulation {
-        let cfg = Config {
-            render_cube: false,
-            scalar_field_dim: 16,
-        };
+        let cfg = Settings::new();
 
         let program = program!(display,
         140 => {

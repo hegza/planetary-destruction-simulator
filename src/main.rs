@@ -1,4 +1,5 @@
 extern crate cgmath;
+extern crate config;
 extern crate env_logger;
 extern crate genmesh;
 #[macro_use]
@@ -11,6 +12,10 @@ extern crate lazy_static;
 extern crate log;
 extern crate obj;
 extern crate rand;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_yaml;
 
 mod game;
 mod init;

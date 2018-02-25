@@ -3,3 +3,4 @@
 **/*.rs.bk
 .*/
 shell.nix
+data/cfg/user.yaml

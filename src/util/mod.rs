@@ -2,7 +2,7 @@
 
 pub mod camera;
 
-use std::fs::File;
+use std::fs::{metadata, File};
 use std::io::Read;
 use glium::Display;
 use glium::vertex::{VertexBuffer, VertexBufferAny};
@@ -84,4 +84,12 @@ pub fn reinterpret_cast_slice<S, T>(input: &[S]) -> &[T] {
     let length_in_bytes = input.len() * mem::size_of::<S>();
     let desired_length = length_in_bytes / mem::size_of::<T>();
     unsafe { slice::from_raw_parts(input.as_ptr() as *const T, desired_length) }
+}
+
+pub fn file_exists(path: &str) -> bool {
+    let metadata = metadata(path);
+    if !metadata.is_ok() {
+        return false;
+    }
+    metadata.unwrap().is_file()
 }
