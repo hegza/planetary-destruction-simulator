@@ -26,25 +26,25 @@ pub struct Simulation {
     cube_vbo: VertexBuffer<VertexPN>,
     cube_ibo: IndexBuffer<u32>,
     cfg: Settings,
-    ended: bool,
 }
 
 impl Simulation {
     pub fn new(cfg: Settings, display: &mut Display) -> Simulation {
-        let program = program!(display,
-        140 => {
-            vertex: str::from_utf8(include_bytes!("../../shader/project.140.vert")).unwrap(),
-            fragment: str::from_utf8(include_bytes!("../../shader/illuminate.140.frag")).unwrap(),
-        },
-    ).unwrap();
+        let program = program!(
+            display,
+            140 => {
+                vertex: str::from_utf8(include_bytes!("../../shader/project.140.vert")).unwrap(),
+                fragment: str::from_utf8(include_bytes!("../../shader/illuminate.140.frag")).unwrap(),
+            }).unwrap();
 
         let cam_control = CameraControl::default();
+        let window_size = display.gl_window().get_inner_size().unwrap();
         let camera = RotationalCamera::new(
             Point3f::new(0.0, 0.0, 0.0),
             Deg(0f32),
             Deg(0f32),
             2f32,
-            1024.0 / 768.0,
+            window_size.0 as f32 / window_size.1 as f32,
         );
 
         let m_transform = Decomposedf {
@@ -67,7 +67,6 @@ impl Simulation {
             cube_ibo: IndexBuffer::new(display, PrimitiveType::TrianglesList, &UNIT_CUBE_IBO)
                 .unwrap(),
             cfg,
-            ended: false,
         }
     }
     pub fn draw(&mut self, display: &mut Display) {
@@ -108,20 +107,17 @@ impl Simulation {
         self.geom_gen
             .update_vbo(&mut self.vbo, &mut self.ibo, display);
     }
-    pub fn process_events(&mut self, actions: &[Action]) -> bool {
-        let keep_running = process_global_events(&mut self.camera, &actions);
+    pub fn process_events(&mut self, actions: &[Action]) -> Option<ProgramCommand> {
+        let cmd = process_global_events(&mut self.camera, &actions);
         process_camera_events(&mut self.cam_control, &actions);
         self.cam_control.update_camera(&mut self.camera);
 
-        keep_running
+        cmd
     }
     pub fn fixed_update(&mut self, dt: f32) {
         self.geom_gen.fixed_update(dt);
     }
     pub fn update(&mut self, dt: f32) {
         self.camera.update(dt);
-    }
-    pub fn ended(&self) -> bool {
-        self.ended
     }
 }

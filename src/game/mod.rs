@@ -101,8 +101,11 @@ impl GameStruct {
             let user_actions = poll_events(&mut self.events_loop);
 
             // Handle eg. resizing and exiting window
-            if !simulation.process_events(&user_actions) {
-                return GameFn::exit();
+            if let Some(cmd) = simulation.process_events(&user_actions) {
+                match cmd {
+                    ProgramCommand::Exit => return GameFn::exit(),
+                    ProgramCommand::RefreshSimulation => return GameFn::new(Self::simulation),
+                }
             }
 
             let now = Instant::now();
@@ -134,11 +137,6 @@ impl GameStruct {
 
             // Update eg. camera
             simulation.late_update(&mut self.display);
-
-            // TODO: Go to game-end state after the game has finished
-            if simulation.ended() {
-                return GameFn::exit();
-            }
         }
     }
 }

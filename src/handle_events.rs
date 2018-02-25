@@ -4,6 +4,7 @@ use util::camera::*;
 #[derive(Debug)]
 pub enum Action {
     Exit,
+    Refresh,
     SetAspect(f32),
     /// Rotate control clockwise ("left")
     CamRotateCw(bool),
@@ -35,6 +36,12 @@ pub fn poll_events(events_loop: &mut glutin::EventsLoop) -> Vec<Action> {
                         VK::Right => actions.push(CamRotateCcw(set)),
                         VK::Up => actions.push(CamRotateN(set)),
                         VK::Down => actions.push(CamRotateS(set)),
+                        // Ctrl + R -> restart simulation
+                        VK::R => {
+                            if set && input.modifiers.ctrl {
+                                actions.push(Refresh);
+                            }
+                        }
                         _ => {}
                     }
                 }
@@ -49,21 +56,28 @@ pub fn poll_events(events_loop: &mut glutin::EventsLoop) -> Vec<Action> {
     actions
 }
 
-pub fn process_global_events(camera: &mut Camera, actions: &[Action]) -> bool {
-    let mut cont = true;
+#[derive(Debug)]
+pub enum ProgramCommand {
+    Exit,
+    RefreshSimulation,
+}
+
+pub fn process_global_events(camera: &mut Camera, actions: &[Action]) -> Option<ProgramCommand> {
+    let mut command = None;
     actions.iter().for_each(|action| {
         use self::Action::*;
         match *action {
             Exit => {
-                cont = false;
+                command = Some(ProgramCommand::Exit);
             }
             SetAspect(naspect) => {
                 camera.set_aspect(naspect);
             }
+            Refresh => command = Some(ProgramCommand::RefreshSimulation),
             _ => {}
         }
     });
-    cont
+    command
 }
 
 pub fn process_camera_events(control: &mut CameraControl, actions: &[Action]) {
