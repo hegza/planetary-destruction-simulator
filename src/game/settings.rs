@@ -11,6 +11,7 @@ use std::collections::HashMap;
 pub struct Settings {
     pub render_cube: bool,
     pub scalar_field_dim: usize,
+    pub fixed_fps: f64,
 }
 
 impl Default for Settings {
@@ -18,6 +19,7 @@ impl Default for Settings {
         Settings {
             render_cube: false,
             scalar_field_dim: 16,
+            fixed_fps: 60f64,
         }
     }
 }

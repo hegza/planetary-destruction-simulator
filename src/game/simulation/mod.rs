@@ -1,4 +1,3 @@
-mod settings;
 mod geometry;
 mod unit_cube;
 
@@ -14,7 +13,7 @@ use prelude::*;
 use shader;
 use self::geometry::*;
 use self::unit_cube::*;
-use self::settings::*;
+use super::settings::*;
 
 pub struct Simulation {
     program: Program,
@@ -31,9 +30,7 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    pub fn new(display: &mut Display) -> Simulation {
-        let cfg = Settings::new();
-
+    pub fn new(cfg: Settings, display: &mut Display) -> Simulation {
         let program = program!(display,
         140 => {
             vertex: str::from_utf8(include_bytes!("../../shader/project.140.vert")).unwrap(),

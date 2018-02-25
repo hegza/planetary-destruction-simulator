@@ -1,12 +1,13 @@
+mod settings;
 mod simulation;
 
 use glium::*;
 use glutin::*;
 use handle_events::*;
-
 use std::time::{Duration, Instant};
 use std::ops::Deref;
 use self::simulation::*;
+use self::settings::*;
 
 pub enum GameFn {
     StateFn(fn(&mut GameStruct) -> GameFn),
@@ -72,8 +73,10 @@ impl GameStruct {
     pub fn simulation(&mut self) -> GameFn {
         info!("GameStruct::simulation");
 
-        const FIXED_TIMESTEP_NS: u32 = 16666667;
-        let fixed_deltatime = Duration::new(0, FIXED_TIMESTEP_NS);
+        let cfg = Settings::new();
+
+        let fixed_timestep_ns: u32 = ((1.0 / cfg.fixed_fps as f64) * 1e+9) as u32;
+        let fixed_deltatime = Duration::new(0, fixed_timestep_ns);
         let fixed_timestep_s = (fixed_deltatime.as_secs() as f64
             + fixed_deltatime.subsec_nanos() as f64 * 1e-9) as f32;
         debug!(
@@ -82,7 +85,7 @@ impl GameStruct {
             1f32 / fixed_timestep_s
         );
 
-        let mut simulation = Simulation::new(&mut self.display);
+        let mut simulation = Simulation::new(cfg, &mut self.display);
 
         // Update eg. camera before starting the main loop
         simulation.late_update(&mut self.display);
