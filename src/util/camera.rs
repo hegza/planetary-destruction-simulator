@@ -1,5 +1,5 @@
 use prelude::*;
-use cgmath::{perspective, Deg, Rad, Rotation, Vector2, Zero};
+use cgmath::{perspective, Deg, InnerSpace, Rad, Rotation, Vector2, Zero};
 use std::ops::{Deref, DerefMut};
 
 pub struct Camera {
@@ -190,7 +190,11 @@ impl CameraControl {
             }
         }
 
-        camera.set_avel(Vector2f::new(long_vel, lat_vel) * ROT_SPEED);
+        let mut avel = Vector2f::new(long_vel, lat_vel);
+        if avel.magnitude2() >= 0.1f32 {
+            avel = avel.normalize();
+        }
+        camera.set_avel(avel * ROT_SPEED);
     }
 }
 
