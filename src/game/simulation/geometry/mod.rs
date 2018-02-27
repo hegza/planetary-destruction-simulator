@@ -25,7 +25,7 @@ pub struct GeometryGen {
 impl GeometryGen {
     pub fn new(scalar_field_side: usize) -> GeometryGen {
         let model = ScalarField::new(scalar_field_side, 0.16f32);
-        let source = CentralDifference::new(model);
+        let source = CentralDifference::new_with_epsilon(model, 1f32 / scalar_field_side as f32);
         let marching_cubes = MarchingCubes::new(scalar_field_side);
         GeometryGen {
             marching_cubes,
