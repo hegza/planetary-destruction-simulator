@@ -12,14 +12,14 @@ out vec4 f_color;
 const float TEX_SCALE = 2.;
 
 // Constant lighting
-const float AMBIENT_LIGHT = 0.3;
+const float AMBIENT_LIGHT = 0.15;
 const vec3 LIGHT_DIR = vec3(-1.0, 0.0, 0.0);
 
 // Equatorial material properties, albedo == diffuse
-const float ALBEDO_EQ = 0.4;
+const float ALBEDO_EQ = 1.6;
 
 // Polar material properties, albedo == diffuse
-const float ALBEDO_POLAR = 0.8;
+const float ALBEDO_POLAR = 2;
 
 vec3 triplanar_blend(vec3 world_normal) {
     vec3 blending = abs( world_normal );
@@ -39,19 +39,21 @@ void main() {
     // Blended color
     vec3 normal_tex = xaxis * blending.x + yaxis * blending.y + zaxis * blending.z;
 
+    // Light only
+    // vec3 normal_tex = vec3(0.6);
+
     // Ambient term
-    vec3 ambient_intensity = AMBIENT_LIGHT * normal_tex;
+    vec3 ambient_term = AMBIENT_LIGHT * normal_tex;
 
     // Diffuse term
     float lambertian = dot(v_normal, LIGHT_DIR);
-    float diffuse_intensity_eq = ALBEDO_EQ * lambertian;
-    float diffuse_intensity_polar = ALBEDO_POLAR * lambertian;
+    float diffuse_term_eq = ALBEDO_EQ * lambertian;
+    float diffuse_term_polar = ALBEDO_POLAR * lambertian;
 
-    vec3 diffuse_intensity =
-        diffuse_intensity_eq * xaxis * blending.x +
-        diffuse_intensity_polar * yaxis * blending.y +
-        diffuse_intensity_eq * zaxis * blending.z;
+    vec3 diffuse_term =
+        diffuse_term_eq * xaxis * blending.x +
+        diffuse_term_polar * yaxis * blending.y +
+        diffuse_term_eq * zaxis * blending.z;
 
-    vec3 color = normal_tex;
-    f_color = vec4(ambient_intensity + diffuse_intensity, 1.0);
+    f_color = vec4(ambient_term + diffuse_term, 1.0);
 }

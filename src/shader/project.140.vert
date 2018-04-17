@@ -8,7 +8,6 @@ uniform float scale;
 
 in vec3 position;
 in vec3 normal;
-// TODO: tex-coords
 
 out vec3 v_position;
 out vec3 v_normal;
