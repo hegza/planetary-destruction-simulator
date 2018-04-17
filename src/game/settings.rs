@@ -12,6 +12,8 @@ pub struct Settings {
     pub render_cube: bool,
     pub scalar_field_dim: usize,
     pub fixed_fps: f64,
+    pub planet_texture: String,
+    pub polar_texture: String,
 }
 
 impl Default for Settings {
@@ -20,6 +22,8 @@ impl Default for Settings {
             render_cube: false,
             scalar_field_dim: 16,
             fixed_fps: 60f64,
+            planet_texture: "local_data/planet_textures_by_kakarotti/planet1.jpg".to_owned(),
+            polar_texture: "data/texture/ice.png".to_owned(),
         }
     }
 }

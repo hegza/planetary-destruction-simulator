@@ -2,6 +2,7 @@ mod geometry;
 mod unit_cube;
 
 use glium::*;
+use glium::texture::SrgbTexture2d;
 use cgmath::prelude::*;
 use cgmath::Deg;
 use std::str;
@@ -14,6 +15,8 @@ use shader;
 use self::geometry::*;
 use self::unit_cube::*;
 use super::settings::*;
+use image;
+use image::GenericImage;
 
 pub struct Simulation {
     program: Program,
@@ -26,6 +29,8 @@ pub struct Simulation {
     cube_vbo: VertexBuffer<VertexPN>,
     cube_ibo: IndexBuffer<u32>,
     cfg: Settings,
+    planet_texture: SrgbTexture2d,
+    polar_texture: SrgbTexture2d,
 }
 
 impl Simulation {
@@ -34,7 +39,7 @@ impl Simulation {
             display,
             140 => {
                 vertex: str::from_utf8(include_bytes!("../../shader/project.140.vert")).unwrap(),
-                fragment: str::from_utf8(include_bytes!("../../shader/illuminate.140.frag")).unwrap(),
+                fragment: str::from_utf8(include_bytes!("../../shader/triplanar.140.frag")).unwrap(),
             }).unwrap();
 
         let cam_control = CameraControl::default();
@@ -55,6 +60,37 @@ impl Simulation {
 
         let geom_gen = GeometryGen::new(cfg.scalar_field_dim);
 
+        // TODO: refactor
+        // Load the texture for the triplanar mapping
+        let planet_img = image::open(&cfg.planet_texture).expect(&format!(
+            "cannot open texture file at {}",
+            &cfg.planet_texture
+        ));
+        let polar_img = image::open(&cfg.polar_texture).expect(&format!(
+            "cannot open texture file at {}",
+            &cfg.polar_texture
+        ));
+        let planet_img = planet_img
+            .to_rgb()
+            .pixels()
+            .into_iter()
+            .map(|p| (p.data[0], p.data[1], p.data[2]))
+            .collect::<Vec<(u8, u8, u8)>>()
+            .chunks(planet_img.width() as usize)
+            .map(|x| x.to_vec())
+            .collect::<Vec<Vec<(u8, u8, u8)>>>();
+        let polar_img = polar_img
+            .to_rgb()
+            .pixels()
+            .into_iter()
+            .map(|p| (p.data[0], p.data[1], p.data[2]))
+            .collect::<Vec<(u8, u8, u8)>>()
+            .chunks(polar_img.width() as usize)
+            .map(|x| x.to_vec())
+            .collect::<Vec<Vec<(u8, u8, u8)>>>();
+        let planet_texture = SrgbTexture2d::new(display, planet_img).unwrap();
+        let polar_texture = SrgbTexture2d::new(display, polar_img).unwrap();
+
         Simulation {
             program,
             cam_control,
@@ -67,10 +103,17 @@ impl Simulation {
             cube_ibo: IndexBuffer::new(display, PrimitiveType::TrianglesList, &UNIT_CUBE_IBO)
                 .unwrap(),
             cfg,
+            planet_texture,
+            polar_texture,
         }
     }
     pub fn draw(&mut self, display: &mut Display) {
-        let model_uni = shader::project(&self.camera, &self.m_transform);
+        let model_uni = shader::project_triplanar(
+            &self.camera,
+            &self.m_transform,
+            &self.planet_texture,
+            &self.polar_texture,
+        );
 
         // Draw parameters
         let params = DrawParameters {
