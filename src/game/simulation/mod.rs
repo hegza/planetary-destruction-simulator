@@ -60,36 +60,9 @@ impl Simulation {
 
         let geom_gen = GeometryGen::new(cfg.scalar_field_dim);
 
-        // TODO: refactor
-        // Load the texture for the triplanar mapping
-        let planet_img = image::open(&cfg.planet_texture).expect(&format!(
-            "cannot open texture file at {}",
-            &cfg.planet_texture
-        ));
-        let polar_img = image::open(&cfg.polar_texture).expect(&format!(
-            "cannot open texture file at {}",
-            &cfg.polar_texture
-        ));
-        let planet_img = planet_img
-            .to_rgb()
-            .pixels()
-            .into_iter()
-            .map(|p| (p.data[0], p.data[1], p.data[2]))
-            .collect::<Vec<(u8, u8, u8)>>()
-            .chunks(planet_img.width() as usize)
-            .map(|x| x.to_vec())
-            .collect::<Vec<Vec<(u8, u8, u8)>>>();
-        let polar_img = polar_img
-            .to_rgb()
-            .pixels()
-            .into_iter()
-            .map(|p| (p.data[0], p.data[1], p.data[2]))
-            .collect::<Vec<(u8, u8, u8)>>()
-            .chunks(polar_img.width() as usize)
-            .map(|x| x.to_vec())
-            .collect::<Vec<Vec<(u8, u8, u8)>>>();
-        let planet_texture = SrgbTexture2d::new(display, planet_img).unwrap();
-        let polar_texture = SrgbTexture2d::new(display, polar_img).unwrap();
+        // Load the textures for the triplanar mapping
+        let planet_texture = load_texture(&cfg.planet_texture, display);
+        let polar_texture = load_texture(&cfg.polar_texture, display);
 
         Simulation {
             program,
@@ -108,6 +81,7 @@ impl Simulation {
         }
     }
     pub fn draw(&mut self, display: &mut Display) {
+        // Create the uniforms for triplanar mapping + perspective projection for the planet
         let model_uni = shader::project_triplanar(
             &self.camera,
             &self.m_transform,
@@ -163,4 +137,21 @@ impl Simulation {
     pub fn update(&mut self, dt: f32) {
         self.camera.update(dt);
     }
+}
+
+/// Opens the image file based on the file type and loads it's contents into a glium-compatible SrgbTexture2d.
+fn load_texture(filename: &str, display: &Display) -> SrgbTexture2d {
+    let img = image::open(filename).expect(&format!("cannot open texture file at {}", filename));
+    let data = img.to_rgb()
+        .pixels()
+        .into_iter()
+        .map(|p| (p.data[0], p.data[1], p.data[2]))
+        .collect::<Vec<(u8, u8, u8)>>()
+        .chunks(img.width() as usize)
+        .map(|x| x.to_vec())
+        .collect::<Vec<Vec<(u8, u8, u8)>>>();
+    SrgbTexture2d::new(display, data).expect(&format!(
+        "unable to create texture from file at {}",
+        filename
+    ))
 }
