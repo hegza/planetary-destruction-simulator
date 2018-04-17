@@ -38,6 +38,7 @@ impl GeometryGen {
     pub fn fixed_update(&mut self, dt: f32) {
         self.acc += dt;
 
+        /*
         const MIN: f32 = 0.04f32;
         const MAX: f32 = 0.25f32;
         const PERIOD: f32 = 1.5f32;
@@ -45,7 +46,8 @@ impl GeometryGen {
         let s = (f32::sin(self.acc * PI * 2f32 * (1f32 / PERIOD)) + 1f32) * 0.5f32;
         // p -> [MIN, MAX]
         let p = s * (MAX - MIN) + MIN;
-        //*self.source.inner_mut() = ScalarField::new(self.dim, p);
+        *self.source.inner_mut() = ScalarField::new(self.dim, p);
+        */
     }
 
     pub fn update_vbo(
