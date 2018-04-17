@@ -5,6 +5,7 @@ extern crate genmesh;
 #[macro_use]
 extern crate glium;
 extern crate glutin;
+extern crate image;
 extern crate isosurface;
 #[macro_use]
 extern crate lazy_static;
