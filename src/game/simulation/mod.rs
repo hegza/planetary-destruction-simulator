@@ -1,5 +1,6 @@
 mod geometry;
 mod unit_cube;
+mod ocl_util;
 
 use glium::*;
 use glium::texture::SrgbTexture2d;
@@ -34,7 +35,7 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    pub fn new(cfg: Settings, display: &mut Display) -> Simulation {
+    pub fn new(fixed_dt: f32, cfg: Settings, display: &mut Display) -> Simulation {
         let program = program!(
             display,
             140 => {
@@ -58,7 +59,7 @@ impl Simulation {
             disp: Vector3f::zero(),
         };
 
-        let geom_gen = GeometryGen::new(cfg.scalar_field_dim);
+        let geom_gen = GeometryGen::new(cfg.scalar_field_dim, fixed_dt);
 
         // Load the textures for the triplanar mapping
         let planet_texture = load_texture(&cfg.planet_texture, display);

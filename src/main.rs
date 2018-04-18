@@ -11,7 +11,9 @@ extern crate isosurface;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate ndarray;
 extern crate obj;
+extern crate ocl;
 extern crate rand;
 extern crate serde;
 #[macro_use]

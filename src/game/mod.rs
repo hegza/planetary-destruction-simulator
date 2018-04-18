@@ -85,7 +85,7 @@ impl GameStruct {
             1f32 / fixed_timestep_s
         );
 
-        let mut simulation = Simulation::new(cfg, &mut self.display);
+        let mut simulation = Simulation::new(fixed_timestep_s, cfg, &mut self.display);
 
         // Update eg. camera before starting the main loop
         simulation.late_update(&mut self.display);
