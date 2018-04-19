@@ -32,9 +32,9 @@ vec3 triplanar_blend(vec3 world_normal) {
 void main() {
     // Triplanar blending
     vec3 blending = triplanar_blend(v_normal);
-    vec3 xaxis = texture2D( t_horizontal, v_position.yz * TEX_SCALE).rgb;
-    vec3 yaxis = texture2D( t_vertical, v_position.xz * TEX_SCALE).rgb;
-    vec3 zaxis = texture2D( t_horizontal, v_position.xy * TEX_SCALE).rgb;
+    vec3 xaxis = texture(t_horizontal, v_position.yz * TEX_SCALE).rgb;
+    vec3 yaxis = texture(t_vertical, v_position.xz * TEX_SCALE).rgb;
+    vec3 zaxis = texture(t_horizontal, v_position.xy * TEX_SCALE).rgb;
 
     // Blended color
     vec3 normal_tex = xaxis * blending.x + yaxis * blending.y + zaxis * blending.z;
