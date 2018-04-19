@@ -14,6 +14,7 @@ pub struct Settings {
     pub fixed_fps: f64,
     pub planet_texture: String,
     pub polar_texture: String,
+    pub laser_strength: f32,
 }
 
 impl Default for Settings {
@@ -24,6 +25,7 @@ impl Default for Settings {
             fixed_fps: 60f64,
             planet_texture: "local_data/planet_textures_by_kakarotti/planet1.jpg".to_owned(),
             polar_texture: "data/texture/ice.png".to_owned(),
+            laser_strength: 5f32
         }
     }
 }

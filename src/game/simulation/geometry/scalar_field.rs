@@ -5,21 +5,22 @@ use rand;
 use rand::Rng;
 use ndarray::prelude::*;
 use std::cell::RefCell;
+use std::cmp::min;
 
 /// Represents a 3D scalar field in range [0..1]
-#[derive(Clone)] // xD
+#[derive(Clone)]
 pub struct ScalarField {
     elems: Array3<f32>,
     dim: f32,
 }
 
 impl ScalarField {
-    pub fn new(dim: usize, threshold: f32) -> ScalarField {
+    pub fn new(dim: usize, threshold: f32, surface_jitter: f32) -> ScalarField {
         // The center is 0.5 * (dim - 1); use that as "absolute center"
         let center_abs = Vector3f::new(
-            0.5f32 * (dim - 1) as f32,
-            0.5f32 * (dim - 1) as f32,
-            0.5f32 * (dim - 1) as f32,
+            0.5f32 * (dim - 2) as f32,
+            0.5f32 * (dim - 2) as f32,
+            0.5f32 * (dim - 2) as f32,
         );
 
         let mut rng = rand::thread_rng();
@@ -29,13 +30,19 @@ impl ScalarField {
             for y in 0..dim {
                 for x in 0..dim {
                     let pos = Vector3f::new(x as f32, y as f32, z as f32);
-                    // sample-limits = [(0, 0, 0), (1, 1, 1)]
+                    // Distance between this point and the simulation center; sample-limits = [(0, 0, 0), (1, 1, 1)]
                     let dist_norm = (pos - center_abs) / dim as f32;
                     let dist_norm2 = dist_norm.magnitude2();
-                    let jitter = (rng.next_f32() * 2f32 - 1f32) * 0.02f32;
-                    unsafe {
-                        *elems.uget_mut((z, y, x)) = dist_norm2 - threshold + jitter;
+                    let jitter = (rng.next_f32() * 2f32 - 1f32) * surface_jitter;
+                    let mut elem = unsafe { elems.uget_mut((z, y, x)) };
+                    *elem = dist_norm2 - threshold + jitter;
+                    /*
+                    if dist_norm2 > threshold * threshold {
+                        *elem = 1f32;
+                    } else {
+                        *elem = -1f32;
                     }
+                    */
                 }
             }
         }
@@ -49,7 +56,12 @@ impl ScalarField {
         self.dim as usize
     }
     pub fn center(&self) -> f32 {
-        0.5f32 * (self.dim - 1f32) / self.dim
+        // HACK: This should be dim-1, not dim-2 but hacking it like this compensates for the error
+        // caused by discretization in the marching cubes algorithm
+        0.5f32 * (self.dim - 2f32) / self.dim
+    }
+    pub fn elems_mut(&mut self) -> &mut Array3<f32> {
+        &mut self.elems
     }
     pub fn into_slice(&self) -> &[f32] {
         self.elems.view().into_slice().unwrap()
@@ -74,11 +86,14 @@ impl ScalarField {
     }
     fn resolve_index3d(&self, v: &Vector3f) -> (usize, usize, usize) {
         // Re-scale the indexer vector from [0, 1] to [0, 1[.
-        // HACK: 1.1 scale factor causes the sphere to move a bit off from the center, it might also
-        // cause a crash with some dimensions
-        let z_idx = ((self.dim - 2f32) * v[2]) as usize;
-        let y_idx = ((self.dim - 2f32) * v[1]) as usize;
-        let x_idx = ((self.dim - 2f32) * v[0]) as usize;
+        // HACK: This should be dim-1, not dim-2 but hacking it like this compensates for the error
+        // caused by discretization in the marching cubes algorithm; this also causes a crash in
+        // some fairly rare scenarios :-D
+        // HACK: yeah, let's just clamp them so there's no crash when normals start exploding
+        let d = self.dim as usize - 1;
+        let z_idx = min(((self.dim - 2f32) * v[2]) as usize, d);
+        let y_idx = min(((self.dim - 2f32) * v[1]) as usize, d);
+        let x_idx = min(((self.dim - 2f32) * v[0]) as usize, d);
 
         (z_idx, y_idx, x_idx)
     }

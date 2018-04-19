@@ -1,6 +1,6 @@
 mod geometry;
 mod unit_cube;
-mod ocl_util;
+mod ocl_liquid_sim;
 
 use glium::*;
 use glium::texture::SrgbTexture2d;
@@ -49,17 +49,17 @@ impl Simulation {
             Point3f::new(0.0, 0.0, 0.0),
             Deg(0f32),
             Deg(0f32),
-            2f32,
+            1.5f32,
             window_size.0 as f32 / window_size.1 as f32,
         );
+
+        let geom_gen = GeometryGen::new(cfg.scalar_field_dim, fixed_dt, cfg.laser_strength);
 
         let m_transform = Decomposedf {
             scale: 1f32,
             rot: Quaternionf::zero(),
             disp: Vector3f::zero(),
         };
-
-        let geom_gen = GeometryGen::new(cfg.scalar_field_dim, fixed_dt);
 
         // Load the textures for the triplanar mapping
         let planet_texture = load_texture(&cfg.planet_texture, display);
@@ -129,6 +129,7 @@ impl Simulation {
         let cmd = process_global_events(&mut self.camera, &actions);
         process_camera_events(&mut self.cam_control, &actions);
         self.cam_control.update_camera(&mut self.camera);
+        self.process_actions(actions);
 
         cmd
     }
@@ -137,6 +138,15 @@ impl Simulation {
     }
     pub fn update(&mut self, dt: f32) {
         self.camera.update(dt);
+    }
+    fn process_actions(&mut self, actions: &[Action]) {
+        actions.iter().for_each(|action| {
+            use self::Action::*;
+            match *action {
+                Shoot(set) => self.geom_gen.explode(set),
+                _ => {}
+            }
+        });
     }
 }
 

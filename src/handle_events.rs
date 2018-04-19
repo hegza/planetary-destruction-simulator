@@ -14,6 +14,8 @@ pub enum Action {
     CamRotateN(bool),
     /// Rotate control south
     CamRotateS(bool),
+    /// Shoot laser
+    Shoot(bool),
 }
 
 pub fn poll_events(events_loop: &mut glutin::EventsLoop) -> Vec<Action> {
@@ -42,6 +44,13 @@ pub fn poll_events(events_loop: &mut glutin::EventsLoop) -> Vec<Action> {
                                 actions.push(Refresh);
                             }
                         }
+                        VK::Space => {
+                            let set = match input.state {
+                                glutin::ElementState::Pressed => true,
+                                glutin::ElementState::Released => false,
+                            };
+                            actions.push(Shoot(set));
+                        },
                         _ => {}
                     }
                 }
